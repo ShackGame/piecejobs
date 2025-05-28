@@ -1,5 +1,5 @@
 package com.piecejobs.api.user.model;
-import com.piecejobs.api.user.common.UserType;
+import com.piecejobs.api.user.utils.UserType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,27 +12,27 @@ public class user {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private Long id;
 
-    @Column
-    private String FirstName;
+    @Column(name = "first_name")
+    private String firstName;
 
-    @Column
-    private String LastName;
+    @Column(name = "last_name")
+    private String lastName;
 
-    @Column
+    @Column(name = "phone_number")
     private String phoneNumber;
 
-    @Column
+    @Column(name = "email")
     private  String email;
 
-    @Column
+    @Column(name = "password")
     private  String password;
 
-    @Column
+    @Column(name = "userType")
     private UserType userType;
 
-    @Column
-    private String Biography;
+    @Column(name = "bio")
+    private String biography;
 
 }
