@@ -1,15 +1,18 @@
+version: '3.8'
 
 services:
   postgres:
-    image: postgres:14
+    image: postgres
     environment:
-      POSTGRES_DB: piece-job
+      POSTGRES_DB: piece_job
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - piecejobs-network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -21,6 +24,8 @@ services:
       - "7001:80"
     depends_on:
       - postgres
+    networks:
+      - piecejobs-network
 
   app:
     image: piece-job-app
@@ -28,13 +33,19 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "8081:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/piece-job
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/piece_job
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
     depends_on:
       - postgres
+    networks:
+      - piecejobs-network
 
 volumes:
   postgres_data:
+
+networks:
+  piecejobs-network:
+    driver: bridge
