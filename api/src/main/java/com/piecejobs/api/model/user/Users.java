@@ -4,6 +4,8 @@ import com.piecejobs.api.utils.user.UserType;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 public class Users {
@@ -21,4 +23,10 @@ public class Users {
 
     private String email;
     private String password;
+
+
+    private boolean enabled;
+    private String otp;
+    private LocalDateTime otpCreatedAt;
+
 }

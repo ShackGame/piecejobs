@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@EnableWebSecurity  // Optional but recommended if you customize security
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
@@ -21,9 +21,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)   // disable CSRF
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "auth/verify-otp",
+                                "/auth/reset-password", "/auth/send-otp", "auth/verify-reset-otp").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();

@@ -32,6 +32,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="flutter.renderer"
+            android:value="skia" />
 
         <!-- Add to AndroidManifest.xml inside <application> -->
         <provider
