@@ -14,3 +14,4 @@ DevOps: Docker
 
 Tools & IDEs: IntelliJ IDEA, Android Studio
 
+The app is in its early stages, developed by Moeketsi Betana, Nkopane Molefi, Thamsanqa Dyantyi
