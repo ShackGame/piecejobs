@@ -29,7 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _agreedToTerms = false;
   bool _isLoading = false; // <-- Loading state
 
-  final List<String> _userTypes = ['JobSeeker', 'Employer'];
+  final List<String> _userTypes = ['Client', 'Provider', 'Admin'];
   String? _selectedUserType;
 
   final List<String> _provinces = [

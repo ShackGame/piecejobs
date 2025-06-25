@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -16,10 +18,10 @@ class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
   bool _isLoading = false;
   int _currentStep = 0;
-  final TextEditingController _toolController = TextEditingController();
-  List<String> _tools = [];
+  final TextEditingController _servicesController = TextEditingController();
+  List<String> _services = [];
 
-  final List<String> _jobCategories = [
+  final List<String> _businessCategories = [
     'Plumbing',
     'Beauty',
     'Painting',
@@ -33,21 +35,18 @@ class _ProfilePageState extends State<ProfilePage> {
     'Other',
   ];
 
-  final Set<String> _selectedCategories = {};
-
-  String _selectedGender = 'Male'; // default
-  final TextEditingController _genderController = TextEditingController(text: 'Male');
+  String? _selectedCategories;
 
   // Controllers
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _surnameController = TextEditingController();
-  final TextEditingController _cellController = TextEditingController();
-  final TextEditingController _dobController = TextEditingController();
-  final TextEditingController _provinceController = TextEditingController();
+  final TextEditingController _businessNameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
-  final TextEditingController _aboutController = TextEditingController();
-  final TextEditingController _areaCommonNameController = TextEditingController();
+  final TextEditingController _businessHoursController = TextEditingController();
+  final TextEditingController _businessDaysController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _alternateNumberController = TextEditingController();
 
   // Permissions
   Future<bool> _requestPermissions() async {
@@ -106,74 +105,61 @@ class _ProfilePageState extends State<ProfilePage> {
   List<Step> _buildSteps() {
     return [
       Step(
-        title: const Text('Personal'),
+        title: const Text('Business de1tails'),
         content: Column(
           children: [
-            _buildTextField(_nameController, 'Name'),
-            _buildTextField(_surnameController, 'Surname'),
-            _buildTextField(_dobController, 'Date of Birth', hint: 'YYYY-MM-DD'),
-            _buildTextField(_cellController, 'Cell Number', keyboard: TextInputType.phone),
-            DropdownButtonFormField<String>(
-              value: _selectedGender,
-              items: ['Male', 'Female'].map((String gender) {
-                return DropdownMenuItem<String>(
-                  value: gender,
-                  child: Text(gender),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedGender = newValue!;
-                  _genderController.text = _selectedGender; // Optional: if you still use the controller
-                });
-              },
-              decoration: const InputDecoration(
-                labelText: 'Gender',
-                border: OutlineInputBorder(),
-              ),
-            )
+            _buildTextField(_businessNameController, 'Business Name'),
+            _buildTextField(_descriptionController, 'Description'),
+            _buildTextField(_cityController, 'City'),
+            _buildTextField(_addressController, 'General address'),
+            _buildTextField(_phoneNumberController, 'Phone Number', keyboard: TextInputType.phone),
+            _buildTextField(_alternateNumberController, 'Alternative Number', keyboard: TextInputType.phone),
+
           ],
         ),
         isActive: _currentStep >= 0,
       ),
       Step(
-        title: const Text('Location'),
+        title: const Text('Business'),
         content: Column(
           children: [
-            _buildTextField(_provinceController, 'Province'),
-            _buildTextField(_cityController, 'City/Town'),
-            _buildTextField(_areaCommonNameController, 'Area common name'),
+            DropdownButtonFormField<String>(
+              value: _selectedCategories,
+              decoration: InputDecoration(
+                labelText: 'Category',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              items: _businessCategories.map((String province) {
+                return DropdownMenuItem(value: province, child: Text(province));
+              }).toList(),
+              onChanged: (value) => setState(() => _selectedCategories = value),
+              validator: (value) {
+                final isValid = value != null && value.isNotEmpty;
+                return isValid ? null : 'Please select a category';
+              },
+            ),
+            _buildTextField(_businessDaysController, 'Working days'),
+            _buildTextField(_businessHoursController, 'Working hours'),
           ],
         ),
         isActive: _currentStep >= 1,
       ),
       Step(
-        title: const Text('Skills'),
-        content: Column(
-          children: [
-            const Text("Select applicable job categories:"),
-            _buildCheckboxList(),
-            const SizedBox(height: 10),
-          ],
-        ),
-        isActive: _currentStep >= 2,
-      ),
-      Step(
-        title: const Text('Tools'),
+        title: const Text('Services'),
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Name tools you own"),
+            const Text("Name your services"),
             TextField(
-              controller: _toolController,
+              controller: _servicesController,
               decoration: const InputDecoration(
-                hintText: 'Enter a tool and press enter',
+                hintText: 'Enter a service and press enter',
               ),
               onSubmitted: (value) {
                 if (value.trim().isNotEmpty) {
                   setState(() {
-                    _tools.add(value.trim());
-                    _toolController.clear();
+                    _services.add(value.trim());
+                    _servicesController.clear();
                   });
                 }
               },
@@ -182,7 +168,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Wrap(
               spacing: 8,
               runSpacing: 4,
-              children: _tools
+              children: _services
                   .asMap()
                   .entries
                   .map(
@@ -191,7 +177,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   deleteIcon: const Icon(Icons.close),
                   onDeleted: () {
                     setState(() {
-                      _tools.removeAt(entry.key);
+                      _services.removeAt(entry.key);
                     });
                   },
                 ),
@@ -205,27 +191,6 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     ];
   }
-
-  Widget _buildCheckboxList() {
-    return Column(
-      children: _jobCategories.map((category) {
-        return CheckboxListTile(
-          title: Text(category),
-          value: _selectedCategories.contains(category),
-          onChanged: (bool? value) {
-            setState(() {
-              if (value == true) {
-                _selectedCategories.add(category);
-              } else {
-                _selectedCategories.remove(category);
-              }
-            });
-          },
-        );
-      }).toList(),
-    );
-  }
-
 
   Widget _buildTextField(TextEditingController controller, String label,
       {bool isOptional = false, TextInputType keyboard = TextInputType.text, String? hint}) {
@@ -314,8 +279,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            _buildTextField(_aboutController, 'About'),
             const SizedBox(height: 20),
             Stepper(
               physics: const ClampingScrollPhysics(),
