@@ -15,3 +15,5 @@ DevOps: Docker
 Tools & IDEs: IntelliJ IDEA, Android Studio
 
 The app is in its early stages
+
+Login, register, forgot-password, view profile, edit profile works
