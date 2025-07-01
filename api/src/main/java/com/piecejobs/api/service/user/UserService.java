@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 
 import static java.lang.String.format;
@@ -92,5 +93,8 @@ public class UserService {
         return user;
     }
 
+    public Optional<Users> getById(Long userId) {
+        return userRepository.findById(userId);
+    }
 
 }

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:client/screens/home/profiles/provider_profile_edit_page.dart';
+import 'package:client/screens/home/profiles/provider/provider_profile_edit_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -55,8 +55,6 @@ class _ProviderProfileViewPage extends State<ProviderProfileViewPage> {
     }
   }
 
-  void _toggleEdit() => setState(() => _isEditing = !_isEditing);
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -82,7 +80,13 @@ class _ProviderProfileViewPage extends State<ProviderProfileViewPage> {
     )
         : Scaffold(
       appBar: AppBar(
-        title: const Text("Business Details"),
+        title: const Text(
+          'View business profile',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold, // Use fontWeight for bold text
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),

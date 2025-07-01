@@ -6,17 +6,18 @@ import java.util.List;
 import java.util.Set;
 
 @Data
-public class ProviderRequest {
+public class BusinessRequest {
+
     private String businessName;
     private String description;
     private String city;
     private String suburb;
+    private String businessPhone;
     private String category;
-    private Set<String> workingDays;
     private String startTime;
     private String endTime;
+    private List<String> workingDays;
     private List<String> services;
     private float minRate;
     private float maxRate;
-
 }

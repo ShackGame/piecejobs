@@ -1,19 +1,20 @@
 import 'dart:convert';
 
 import 'package:client/screens/home/dashboard.dart';
-import 'package:client/screens/home/dashboards/admin_dashboard_page.dart';
-import 'package:client/screens/home/dashboards/client_dashboard_page.dart';
-import 'package:client/screens/home/dashboards/provider_dashboard_page.dart';
+import 'package:client/screens/home/dashboards/admin/admin_dashboard_page.dart';
+import 'package:client/screens/home/dashboards/client/client_dashboard_page.dart';
+import 'package:client/screens/home/dashboards/provider/provider_dashboard_page.dart';
 import 'package:client/screens/home/messages.dart';
 import 'package:client/screens/home/profile_page.dart';
-import 'package:client/screens/home/profiles/provider_profile_edit_page.dart';
-import 'package:client/screens/home/profiles/provider_profile_view_page.dart';
+import 'package:client/screens/home/profiles/provider/provider_add_business_page.dart';
+import 'package:client/screens/home/profiles/provider/provider_profile_edit_page.dart';
+import 'package:client/screens/home/profiles/provider/provider_profile_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../auth/login.dart';
-import 'messages/provider_messages_page.dart';
+import 'messages/provider/provider_messages_page.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,13 +24,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String? _userType;
   int _selectedIndex = 0;
 
   bool _isChecking = false;
 
   List<Widget> _pages = [];
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index) async {
     setState(() {
       _selectedIndex = index;
     });
@@ -43,14 +45,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _checkLoginStatus() async {
 
-    setState(() {
-      _isChecking =true;
-    });
-
     final prefs = await SharedPreferences.getInstance();
     final email = prefs.getString('email');
     final userId = prefs.getInt('userId');
     final userType = prefs.getString('userType');
+
+    _userType = userType;
+    setState(() {
+      _isChecking =true;
+    });
 
     const String ROLE_CLIENT = 'Client';
     const String ROLE_PROVIDER = 'Provider';
@@ -59,12 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if(!mounted) return;
 
     if (email != null && userId != null && userType != null) {
-      late Widget dashboard, messages, profile;
+      late Widget dashboard, messages, profile, business;
       switch (userType) {
         case ROLE_PROVIDER:
-          dashboard = const ProviderDashboardPage();
+          dashboard = ProviderDashboardPage();
           messages = const ProviderMessagesPage();
-          profile = await _loadProviderProfile(userId);
+          business = ProviderAddBusinessPage();
           break;
         case ROLE_CLIENT:
           dashboard = const DashboardPage();
@@ -85,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _pages = [
           dashboard,
           messages,
-          profile,
+          business,
         ];
         _isChecking = false;
       });
@@ -125,8 +128,6 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-    // If profile doesn't exist
-
 
   @override
   Widget build(BuildContext context) {
@@ -143,18 +144,18 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.message),
             label: 'Messages',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(_userType == 'Provider' ? Icons.add_business : Icons.person),
+            label: _userType == 'Provider' ? 'Add Business' : 'Profile',
           ),
         ],
       ),

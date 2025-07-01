@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:client/screens/home/profiles/provider_profile_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -81,6 +80,7 @@ class _ProviderProfileEditPageState extends State<ProviderProfileEditPage> {
     }
     return true;
   }
+
   // Image Picker
   Future<void> _pickImage() async {
     try {
@@ -182,6 +182,7 @@ class _ProviderProfileEditPageState extends State<ProviderProfileEditPage> {
     _minRateController.dispose();
     _maxRateController.dispose();
     _servicesController.dispose();
+
     super.dispose();
   }
 
@@ -490,16 +491,7 @@ class _ProviderProfileEditPageState extends State<ProviderProfileEditPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Business profile',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold, // Use fontWeight for bold text
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: const Text("Add Business")),
       body: Form(
         key: _formKey,
         child: ListView(

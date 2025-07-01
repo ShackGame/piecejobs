@@ -49,16 +49,7 @@ class _ProviderMessagesPage extends State<ProviderMessagesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Provider Messages',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: const Text("Messaging")),
       body: ListView.builder(
         itemCount: chatThreads.length,
         itemBuilder: (context, index) {

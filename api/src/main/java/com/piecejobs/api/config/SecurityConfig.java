@@ -2,6 +2,7 @@ package com.piecejobs.api.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -26,27 +27,22 @@ public class SecurityConfig implements WebMvcConfigurer {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login", "auth/verify-otp",
-                                "/auth/reset-password", "/auth/send-otp", "auth/verify-reset-otp",
-                                "/providers/**", "/providers/upload-profile-image/**").permitAll()
+                        .requestMatchers(
+                                "/auth/register",
+                                "/auth/login",
+                                "/auth/verify-otp",
+                                "/auth/reset-password",
+                                "/auth/send-otp",
+                                "/auth/verify-reset-otp",
+                                "/users/upload-profile-image/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/**", "/businesses/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/users/**", "/businesses/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/businesses/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/businesses/**").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();
-    }
-
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry
-                .addResourceHandler("/uploads/**")
-                .addResourceLocations("file:C:/uploads/")  // Note the "file:" prefix
-                .setCachePeriod(0);
-    }
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedMethods("*")
-                .allowedOrigins("*");  // Optional: adjust for production
     }
 
 }
