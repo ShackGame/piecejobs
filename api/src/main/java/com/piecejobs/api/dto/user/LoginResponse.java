@@ -14,4 +14,5 @@ public class LoginResponse {
     private String lastName;
     private UserType userType;
     private String province;
+    private String token;
 }

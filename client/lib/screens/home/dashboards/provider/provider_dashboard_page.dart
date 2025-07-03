@@ -81,9 +81,13 @@ class _ProviderDashboardPage extends State<ProviderDashboardPage> {
         title: const Text("Businesses"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
+            icon: const Icon(
+              Icons.logout,
+              color: Colors.deepPurpleAccent,
+            ),
             tooltip: "Logout",
+            onPressed: _logout,
+            splashRadius: 24, // Optional: better touch target
           ),
         ],
       ),
@@ -260,23 +264,89 @@ class _ProviderDashboardPage extends State<ProviderDashboardPage> {
                                     ),
                                   ),
                                 const SizedBox(height: 12),
-                                Text("Description: ${business['description'] ?? '-'}"),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.description, size: 20, color: Colors.deepPurpleAccent),
+                                    const SizedBox(width: 6),
+                                    const Text('Description: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text(business['description'] ?? '-')),
+                                  ],
+                                ),
                                 const SizedBox(height: 6),
-                                Text("Category: ${business['category'] ?? '-'}"),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.category, size: 20, color: Colors.deepPurpleAccent),
+                                    const SizedBox(width: 6),
+                                    const Text('Category: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text(business['category'] ?? '-')),
+                                  ],
+                                ),
                                 const SizedBox(height: 6),
-                                Text("City: ${business['city'] ?? '-'}"),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_city, size: 20, color: Colors.deepPurpleAccent),
+                                    const SizedBox(width: 6),
+                                    const Text('City: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text(business['city'] ?? '-')),
+                                  ],
+                                ),
                                 const SizedBox(height: 6),
-                                Text("Suburb: ${business['suburb'] ?? '-'}"),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.home, size: 20, color: Colors.deepPurpleAccent),
+                                    const SizedBox(width: 6),
+                                    const Text('Suburb: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text(business['suburb'] ?? '-')),
+                                  ],
+                                ),
                                 const SizedBox(height: 6),
-                                Text("Working Days: ${(business['workingDays'] as List<dynamic>?)?.join(', ') ?? '-'}"),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.calendar_today, size: 20, color: Colors.deepPurpleAccent),
+                                    const SizedBox(width: 6),
+                                    const Text('Working Days: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text((business['workingDays'] as List<dynamic>?)?.join(', ') ?? '-')),
+                                  ],
+                                ),
                                 const SizedBox(height: 6),
-                                Text("Working Hours: ${business['startTime']} - ${business['endTime']}"),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.access_time, size: 20, color: Colors.deepPurpleAccent),
+                                    const SizedBox(width: 6),
+                                    const Text('Working Hours: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text('${business['startTime']} - ${business['endTime']}')),
+                                  ],
+                                ),
                                 const SizedBox(height: 6),
-                                Text("Rate: R${business['minRate']} - R${business['maxRate']}"),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.attach_money, size: 20, color: Colors.deepPurpleAccent),
+                                    const SizedBox(width: 6),
+                                    const Text('Rate: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text('R${business['minRate']} - R${business['maxRate']}')),
+                                  ],
+                                ),
                                 const SizedBox(height: 6),
-                                Text("Phone: ${business['businessPhone'] ?? '-'}"),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.phone, size: 20, color: Colors.deepPurpleAccent),
+                                    const SizedBox(width: 6),
+                                    const Text('Phone: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text(business['businessPhone'] ?? '-')),
+                                  ],
+                                ),
                                 const SizedBox(height: 6),
-                                Text("Services: ${(business['services'] as List<dynamic>?)?.join(', ') ?? '-'}"),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(Icons.miscellaneous_services, size: 20, color: Colors.deepPurpleAccent),
+                                    const SizedBox(width: 6),
+                                    const Text('Services: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    Expanded(child: Text((business['services'] as List<dynamic>?)?.join(', ') ?? '-')),
+                                  ],
+                                ),
                               ],
                             ),
                           ),

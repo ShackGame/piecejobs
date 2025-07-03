@@ -4,7 +4,7 @@ import 'package:client/screens/auth/verification.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:client/enums.dart';
-
+import 'package:client/utils/input_decoration_utils.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -274,10 +274,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         children: [
                           TextFormField(
                             controller: _firstNameController,
-                            decoration: InputDecoration(
-                              labelText: 'First name',
-                              hintText: 'Enter your first name',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            decoration: buildInputDecoration(
+                                'First name', Icons.person, hintText: 'Enter your first name'
                             ),
                             validator: (value) {
                               final isValid = value != null && value.isNotEmpty;
@@ -287,10 +285,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _lastNameController,
-                            decoration: InputDecoration(
-                              labelText: 'Surname',
-                              hintText: 'Enter your Surname',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            decoration: buildInputDecoration(
+                              'Last name', Icons.person_outline, hintText: 'Enter your last name'
                             ),
                             validator: (value) {
                               final isValid = value != null && value.isNotEmpty;
@@ -302,10 +298,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             controller: _dateController,
                             readOnly: true,
                             onTap: () => _selectDate(context),
-                            decoration: InputDecoration(
-                              labelText: "Date of Birth",
+                            decoration: buildInputDecoration('Date of Birth', Icons.cake).copyWith(
                               suffixIcon: const Icon(Icons.calendar_today, color: Colors.deepPurpleAccent),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                             validator: (value) {
                               final isValid = value != null && value.isNotEmpty;
@@ -315,10 +309,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           const SizedBox(height: 20),
                           DropdownButtonFormField<String>(
                             value: _selectedProvince,
-                            decoration: InputDecoration(
-                              labelText: 'Province',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
+                            decoration: buildInputDecoration('Province', Icons.map),
                             items: _provinces.map((String province) {
                               return DropdownMenuItem(value: province, child: Text(province));
                             }).toList(),
@@ -381,10 +372,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             const SizedBox(height: 20),
                             DropdownButtonFormField<String>(
                               value: _selectedUserType,
-                              decoration: InputDecoration(
-                                labelText: 'User Type',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
+                              decoration: buildInputDecoration('User Type', Icons.person_pin_circle),
                               items: _userTypes.map((String userType) {
                                 return DropdownMenuItem(value: userType, child: Text(userType));
                               }).toList(),

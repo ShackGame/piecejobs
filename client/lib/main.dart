@@ -6,6 +6,7 @@ import 'package:client/screens/home/dashboards/admin/admin_dashboard_page.dart';
 import 'package:client/screens/home/dashboards/client/client_dashboard_page.dart';
 import 'package:client/screens/home/dashboards/provider/provider_dashboard_page.dart';
 import 'package:client/screens/home/profile_page.dart';
+import 'package:client/screens/home/profiles/client/client_profile_page.dart';
 import 'package:client/screens/home/profiles/provider/provider_add_business_page.dart';
 import 'package:flutter/material.dart';
 import 'package:client/screens/auth/forgot.dart';
@@ -31,17 +32,21 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
+        //Authentication
         '/': (context) => SplashScreen(),
         '/register': (context) => RegisterScreen(),
         '/login': (context) => LoginScreen(),
         '/forgot': (context) =>  ForgotPasswordScreen(),
         '/home': (context) =>  HomeScreen(),
+        //Dashboards
         '/dashboard': (context) => DashboardPage(),
         '/cleaners_page': (context) => CleanersPage(),
         '/provider_dashboard_page': (context) =>  ProviderDashboardPage(),
-        '/client_dashboard': (context) =>  ClientDashboard(),
+        '/client_dashboard': (context) =>  ClientDashboardPage(),
         '/admin_dashboard': (context) =>  AdminDashboard(),
+        //Profiles
         '/provider_add_business_page': (context) =>  ProviderAddBusinessPage(),
+        '/client_profile_page': (context) =>  ClientProfilePage(),
       },
         onGenerateRoute: (settings) {
           if (settings.name == '/verification') {

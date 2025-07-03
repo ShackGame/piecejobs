@@ -558,8 +558,41 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
     ];
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      {bool isOptional = false, TextInputType keyboard = TextInputType.text, String? hint}) {
+  Widget _buildTextField(
+      TextEditingController controller,
+      String label, {
+        bool isOptional = false,
+        TextInputType keyboard = TextInputType.text,
+        String? hint,
+      }) {
+    Icon? icon;
+
+    switch (label) {
+      case 'Business Name':
+        icon = const Icon(Icons.business,color: Colors.deepPurpleAccent);
+        break;
+      case 'Description':
+        icon = const Icon(Icons.description,color: Colors.deepPurpleAccent);
+        break;
+      case 'City':
+        icon = const Icon(Icons.location_city,color: Colors.deepPurpleAccent);
+        break;
+      case 'Suburb':
+        icon = const Icon(Icons.location_on,color: Colors.deepPurpleAccent);
+        break;
+      case 'Business Number':
+        icon = const Icon(Icons.phone,color: Colors.deepPurpleAccent);
+        break;
+      case 'Min Rate':
+        icon = const Icon(Icons.money,color: Colors.deepPurpleAccent);
+        break;
+      case 'Max Rate':
+        icon = const Icon(Icons.attach_money,color: Colors.deepPurpleAccent);
+        break;
+      default:
+        icon = const Icon(Icons.text_fields,color: Colors.deepPurpleAccent);
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -584,10 +617,12 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
           labelText: label,
           hintText: hint,
           border: const OutlineInputBorder(),
+          prefixIcon: icon,
         ),
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

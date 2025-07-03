@@ -87,9 +87,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       //Optional: Save user info/token using shared_preferences here
       final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', data['token']);
       await prefs.setString('email', data['email']);
       await prefs.setInt('userId', data['id']);
       await prefs.setString('userType', data['userType']);
+
 
       Navigator.pushReplacementNamed(context, '/home');
     } else if(response.statusCode == 403){

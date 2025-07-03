@@ -3,6 +3,7 @@ package com.piecejobs.api.controller;
 import com.piecejobs.api.dto.user.*;
 import com.piecejobs.api.model.user.Users;
 import com.piecejobs.api.repo.user.UserRepository;
+import com.piecejobs.api.service.JwtService;
 import com.piecejobs.api.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,9 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private UserRepository userRepository;
@@ -45,13 +49,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Please verify your email first.");
         }
 
+        String jwtToken = jwtService.generateToken(user);  // generate token here, pass user details
+
         LoginResponse response = new LoginResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
                 user.getUserType(),
-                user.getProvince()
+                user.getProvince(),
+                jwtToken  // pass the token here
         );
 
         return ResponseEntity.ok(response);
@@ -140,6 +147,5 @@ public class AuthController {
 
         return ResponseEntity.ok("Password reset successful");
     }
-
 
 }
