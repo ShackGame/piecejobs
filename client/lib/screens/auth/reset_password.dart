@@ -58,7 +58,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reset Password'),
-        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),

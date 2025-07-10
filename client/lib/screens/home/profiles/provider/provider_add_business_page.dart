@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:client/screens/home/bookings/provider_bookings_page.dart';
 import 'package:client/screens/home/home.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -9,6 +10,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../../utils/business.dart';
+import '../../../../utils/business_product_image.dart';
+import 'dart:typed_data';
 
 class ProviderAddBusinessPage extends StatefulWidget {
   final Map<String, dynamic>? business;
@@ -21,8 +26,15 @@ class ProviderAddBusinessPage extends StatefulWidget {
 class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
 
   //region Variables
-  File? _imageFile;
+  Uint8List? _existingProfileImage;
+  late Business b;
+  File? _profileImage;
   final ImagePicker _picker = ImagePicker();
+  List<XFile> _pickedImages = [];
+
+  List<Map<String, dynamic>> _existingImages = []; // For images loaded from the DB, each with an 'id' and base64
+
+
   bool _isLoading = false;
   int _currentStep = 0;
 
@@ -51,8 +63,10 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
 
-  final _formKeys = List.generate(3, (_) => GlobalKey<FormState>());
+  TimeOfDay? _stylistStartTime;
+  TimeOfDay? _stylistEndTime;
 
+  final _formKeys = List.generate(4, (_) => GlobalKey<FormState>());
   //endregion
 
   //region Controllers
@@ -66,9 +80,15 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
   final TextEditingController _minRateController = TextEditingController();
   final TextEditingController _maxRateController = TextEditingController();
   final TextEditingController _businessPhoneController = TextEditingController();
+
+  //Stylists
+  final TextEditingController _stylistFirstNameController = TextEditingController();
+  final TextEditingController _stylistLastNameController = TextEditingController();
+  final TextEditingController _stylistHoursController = TextEditingController();
 //endregion
 
   //region Image Picking Functions
+  //region Image Picking functions For Profile
   Future<bool> _requestPermissions() async {
     if (Platform.isAndroid) {
       final status = await Permission.photos.request();
@@ -104,7 +124,7 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
 
       if (pickedFile != null) {
         setState(() {
-          _imageFile = File(pickedFile.path);
+          _profileImage = File(pickedFile.path);
         });
       }
     } catch (e) {
@@ -120,56 +140,119 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
     }
   }
 
-  Future<void> _uploadImage(int userId) async {
-    if (_imageFile == null) return;
+  Future<void> _uploadProfileImage(int businessId) async {
+    if (_profileImage == null) return;
 
     final request = http.MultipartRequest(
       'POST',
-      Uri.parse('http://10.0.2.2:8080/providers/upload-profile-image/$userId'),
+      Uri.parse('http://10.0.2.2:8080/businesses/$businessId/profile/upload'),
     );
 
-    request.files.add(await http.MultipartFile.fromPath('image', _imageFile!.path));
+    request.files.add(await http.MultipartFile.fromPath('image', _profileImage!.path));
 
-    final response = await request.send();
+    try {
+      final response = await request.send();
 
-    if (response.statusCode == 200) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image uploaded successfully')),
-      );
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Image upload failed')),
-      );
+      if (response.statusCode != 200) {
+        final error = await response.stream.bytesToString();
+        debugPrint('Profile upload failed: $error');
+        throw Exception('Profile image upload failed');
+      }else{
+
+      }
+    } catch (e) {
+      debugPrint('Upload profile image error: $e');
+      rethrow;
     }
   }
+
+  //endregion
+
+  //region Image Picking functions For Business Products
+  Future<void> _selectImages() async {
+    final List<XFile>? selected = await _picker.pickMultiImage();
+
+    if (selected != null) {
+      int total = b.products.length;
+
+      if ((total + selected.length) > 5) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You can only have a maximum of 5 product images')),
+        );
+        return;
+      }
+
+      List<BusinessProductImage> newImages = [];
+      for (XFile image in selected) {
+        final bytes = await image.readAsBytes();
+        final base64Image = base64Encode(bytes);
+        newImages.add(BusinessProductImage(id: -1, imageData: base64Image));
+      }
+
+      setState(() {
+        _pickedImages.addAll(selected); // optional, if you use it elsewhere
+        b.products.addAll(newImages);
+      });
+    }
+  }
+
+  Future<void> _uploadProductImages(int businessId) async {
+    if (_pickedImages.isEmpty) return;
+
+    final uri = Uri.parse('http://10.0.2.2:8080/businesses/$businessId/products/upload');
+    final request = http.MultipartRequest('POST', uri);
+
+    for (final image in _pickedImages) {
+      request.files.add(await http.MultipartFile.fromPath('images', image.path));
+    }
+
+    try {
+      final response = await request.send();
+
+      if (response.statusCode != 200) {
+        final error = await response.stream.bytesToString();
+        debugPrint('Profile upload failed: $error');
+        throw Exception('Profile image upload failed');
+      }else
+        {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile pic saved successfully')),
+          );
+        }
+    } catch (e) {
+      debugPrint('Upload product images error: $e');
+      rethrow;
+    }
+  }
+  //endregion
   //endregion
 
   //region Date-Time Formatting Functions
   String _formatTime(TimeOfDay time) {
     final now = DateTime.now();
     final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-    return DateFormat.jm().format(dt); // e.g., 8:00 AM
+    return DateFormat.jm().format(dt); // This uses regular spacing
   }
 
-  TimeOfDay? _parseTime(String? timeString) {
-    if (timeString == null || timeString.isEmpty) return null;
+
+  TimeOfDay? _parseTime(String timeStr) {
     try {
-      final dateTime = DateFormat.jm().parse(timeString); // Parses "8:00 AM"
-      return TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
+      // Replace all Unicode spaces (non-breaking, narrow, etc.) with a normal space
+      final cleaned = timeStr.replaceAll(RegExp(r'\s+'), ' ').replaceAll('\u202F', ' ').trim();
+
+      final parsed = DateFormat.jm().parse(cleaned); // 'jm' = hour + am/pm
+      return TimeOfDay.fromDateTime(parsed);
     } catch (e) {
       debugPrint("Time parse error: $e");
       return null;
     }
   }
-
   //endregion
 
   //region Step Functions
   void _onStepContinue() async {
     final isLastStep = _currentStep == _formKeys.length - 1;
-
     final isValid = _formKeys[_currentStep].currentState?.validate() ?? false;
 
     if (!isValid) return;
@@ -179,7 +262,6 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
       return;
     }
 
-    // Final step: collect data and submit
     final userId = await _getUserIdFromLocalStorage();
 
     final profile = {
@@ -207,25 +289,77 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
           : http.post(uri, headers: {"Content-Type": "application/json"}, body: jsonEncode(profile)));
 
       if (response.statusCode == 200) {
-        await _uploadImage(userId);
+        final responseJson = jsonDecode(response.body);
+        final businessId = responseJson['id'];
+
+        try {
+          await _uploadProfileImage(businessId);
+          await _uploadProductImages(businessId);
+        } catch (e) {
+          debugPrint('Image upload failed: $e');
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload images: $e')),
+          );
+          return;
+        }
+
         if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Business saved successfully')),
         );
-        Navigator.pop(context, true); // instead of pushing HomeScreen
 
+        final prefs = await SharedPreferences.getInstance();
+        final userId = prefs.getInt('userId');
+
+        if (userId == null) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User ID not found')),
+          );
+          return;
+        }
+
+        if (isEditing) {
+          try {
+            final updatedBusiness = await fetchBusinessByUser(userId);
+
+            if (!mounted) return;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(initialIndex: 0,
+                    business: updatedBusiness),
+              ),
+            );
+          } catch (e) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to load updated business: $e')),
+            );
+          }
+        } else {
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomeScreen(initialIndex: 1),
+            ),
+          );
+        }
       } else {
+        // 👇 Add this to handle error cases
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${response.body}')),
+          SnackBar(content: Text('Failed to save business: ${response.statusCode}')),
         );
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Unexpected error: $e')),
       );
-      print("Error: $e");
     }
   }
 
@@ -263,30 +397,114 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
     isEditing = widget.business != null;
 
     if (isEditing) {
-      final b = widget.business!;
-      _businessNameController.text = b['businessName'] ?? '';
-      _descriptionController.text = b['description'] ?? '';
-      _cityController.text = b['city'] ?? '';
-      _suburbController.text = b['suburb'] ?? '';
-      _businessPhoneController.text = b['businessPhone'] ?? '';
-      _selectedCategories = b['category'] ?? '';
-      _selectedDays.addAll(List<String>.from(b['workingDays'] ?? []));
-      _startTime = _parseTime(b['startTime']);
-      _endTime = _parseTime(b['endTime']);
+      b = Business.fromJson(widget.business!);
+      _existingImages = b.products.map((img) => {
+        'id': img.id,
+        'imageData': img.imageData,
+      }).toList();
+
+      _existingProfileImage = b.profileImageBytes;
+      _businessNameController.text = b.businessName;
+      _descriptionController.text = b.description;
+      _cityController.text = b.city;
+      _suburbController.text = b.suburb;
+      _businessPhoneController.text = b.businessPhone;
+      _selectedCategories = b.category;
+      _selectedDays.addAll(b.workingDays);
+      _startTime = _parseTime(b.startTime);
+      _endTime = _parseTime(b.endTime);
+
       if (_startTime != null && _endTime != null) {
         _businessHoursController.text =
         '${_formatTime(_startTime!)} - ${_formatTime(_endTime!)}';
       }
-      _services.addAll(List<String>.from(b['services'] ?? []));
-      _minRateController.text = b['minRate'].toString();
-      _maxRateController.text = b['maxRate'].toString();
+
+      _services.addAll(b.services);
+      _minRateController.text = b.minRate.toString();
+      _maxRateController.text = b.maxRate.toString();
+
+
+    }else {
+      // ✅ Create a new blank business
+      b = Business(
+        id: 0,
+        businessName: '',
+        description: '',
+        province: '',
+        category: '',
+        city: '',
+        suburb: '',
+        businessPhone: '',
+        services: [],
+        workingDays: [],
+        startTime: '',
+        endTime: '',
+        minRate: 0.0,
+        maxRate: 0.0,
+        profileImageUrl: '',
+        rating: 0.0,
+        products: [],
+      );
     }
   }
 
+  Future<Business> fetchBusinessByUser(int userId) async {
+    final response = await http.get(
+      Uri.parse("http://10.0.2.2:8080/businesses/user/$userId/single"),
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      return Business.fromJson(json);
+    } else {
+      throw Exception('Failed to load business');
+    }
+  }
+
+
+  //endregion
+
+  //region Delete Handlers
+  void _removePickedImage(int index) {
+    setState(() {
+      _pickedImages.removeAt(index);
+    });
+  }
+
+  Future<void> _deleteExistingImage(int index, int imageId) async {
+    try {
+      await _deleteImageFromServer(imageId); // your API call
+      setState(() {
+        _existingImages.removeAt(index);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Image deleted')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete image: $e')),
+      );
+    }
+  }
+
+
+  //endregion
+
+  //region CRUID Functions
+  Future<void> _deleteImageFromServer(int imageId) async {
+    final response = await http.delete(
+      Uri.parse('http://10.0.2.2:8080/businesses/products/$imageId'),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete image');
+    }
+  }
   //endregion
 
   List<Step> _buildSteps() {
     return [
+      //Business Details step
       Step(
           title: const Text('Business details'),
           content: Form(
@@ -307,8 +525,9 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
       ),
       isActive: _currentStep >= 0,
       ),
+      //More business info step
       Step(
-        title: const Text('Business'),
+        title: const Text('More business info'),
         content: Form(
           key: _formKeys[1], // <-- Make sure you initialized this in your State
           child: Column(
@@ -331,7 +550,6 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
               ),
 
               const SizedBox(height: 20),
-
               // Working Days
               FormField<List<String>>(
                 initialValue: _selectedDays.toList(),
@@ -381,9 +599,7 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
                   );
                 },
               ),
-
               const SizedBox(height: 20),
-
               // Working Hours Picker
               FormField<String>(
                 validator: (value) => _startTime == null || _endTime == null ? 'Please select working hours' : null,
@@ -398,20 +614,21 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
                         suffixIcon: Icon(Icons.access_time),
                       ),
                       onTap: () async {
-                        TimeOfDay? pickedStart = await showTimePicker(
+                        // Pick start time, defaulting to _startTime or 8:00 AM
+                        final pickedStart = await showTimePicker(
                           context: context,
-                          initialTime: _startTime ?? TimeOfDay(hour: 8, minute: 0),
+                          initialTime: _startTime ?? const TimeOfDay(hour: 8, minute: 0),
                         );
-
                         if (pickedStart == null) return;
 
-                        TimeOfDay? pickedEnd = await showTimePicker(
+                        // Pick end time, defaulting to _endTime or 5:00 PM
+                        final pickedEnd = await showTimePicker(
                           context: context,
-                          initialTime: _endTime ?? TimeOfDay(hour: 17, minute: 0),
+                          initialTime: _endTime ?? const TimeOfDay(hour: 17, minute: 0),
                         );
-
                         if (pickedEnd == null) return;
 
+                        // Update state with the picked times and update the controller text
                         setState(() {
                           _startTime = pickedStart;
                           _endTime = pickedEnd;
@@ -419,6 +636,7 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
                           '${_formatTime(_startTime!)} - ${_formatTime(_endTime!)}';
                         });
 
+                        // If this is inside a FormField, notify the state change
                         state.didChange("set");
                       },
                     ),
@@ -435,6 +653,7 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
         ),
         isActive: _currentStep >= 1,
       ),
+      //Services step
       Step(
         title: const Text('Services'),
         content: Form(
@@ -555,9 +774,94 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
         ),
         isActive: _currentStep >= 2,
       ),
+      //Product Images step
+      Step(
+        title: const Text('Products'),
+        content: Form(
+          key: _formKeys[3],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _selectImages,
+                icon: const Icon(Icons.add_photo_alternate),
+                label: const Text("Select Product Images"),
+              ),
+              const SizedBox(height: 10),
+
+              // ---------- Product Images from Business.products ----------
+              SizedBox(
+                height: 180,
+                child: b.products.isNotEmpty
+                    ? ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: b.products.length,
+                  itemBuilder: (context, index) {
+                    final img = b.products[index];
+                    return Stack(
+                      children: [
+                        Container(
+                          width: 180,
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.memory(
+                              base64Decode(img.imageData),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () async {
+                              final img = b.products[index];
+                              if (img.id == -1) {
+                                setState(() => b.products.removeAt(index));
+                              } else {
+                                try {
+                                  await _deleteImageFromServer(img.id);
+                                  setState(() => b.products.removeAt(index));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Image deleted')),
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Failed to delete image')),
+                                  );
+                                }
+                              }
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.all(4),
+                              child: const Icon(Icons.delete, color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                )
+                    : const Center(child: Text('No product images')),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+        isActive: _currentStep >= 3,
+      ),
     ];
   }
 
+  //region Build Texts
   Widget _buildTextField(
       TextEditingController controller,
       String label, {
@@ -588,6 +892,12 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
         break;
       case 'Max Rate':
         icon = const Icon(Icons.attach_money,color: Colors.deepPurpleAccent);
+        break;
+      case 'First Name':
+        icon = const Icon(Icons.person,color: Colors.deepPurpleAccent);
+        break;
+      case 'Last Name':
+        icon = const Icon(Icons.person_outline,color: Colors.deepPurpleAccent);
         break;
       default:
         icon = const Icon(Icons.text_fields,color: Colors.deepPurpleAccent);
@@ -623,43 +933,54 @@ class _ProviderAddBusinessPage extends State<ProviderAddBusinessPage> {
     );
   }
 
+  Widget _buildImageCard({XFile? file, String? base64, required VoidCallback onDelete}) {
+    return Container(
+      width: 180,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: file != null
+                ? Image.file(File(file.path), fit: BoxFit.cover, width: 180, height: 180)
+                : Image.memory(base64Decode(base64!), fit: BoxFit.cover, width: 180, height: 180),
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: GestureDetector(
+              onTap: onDelete,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(4),
+                child: const Icon(Icons.delete, size: 18, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+//endregion
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
-      appBar: AppBar(title: const Text("New Business")),
+      appBar: AppBar(
+        title: Text(
+          isEditing ? 'Editing ${widget.business?['businessName'] ?? ''}' : 'New Business',
+        ),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Center(
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.grey.shade200,
-                    backgroundImage: _imageFile != null
-                        ? FileImage(_imageFile!)
-                        : const AssetImage('assets/images/default_profile.jpg') as ImageProvider,
-                    child: _isLoading ? const CircularProgressIndicator() : null,
-                  ),
-                  if (!_isLoading)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.deepOrange,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.edit, size: 20, color: Colors.white),
-                        onPressed: _pickImage,
-                      ),
-                    ),
-                ],
-              ),
-            ),
             const SizedBox(height: 20),
             Stepper(
               physics: const ClampingScrollPhysics(),

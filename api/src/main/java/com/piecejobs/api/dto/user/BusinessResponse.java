@@ -2,9 +2,7 @@ package com.piecejobs.api.dto.user;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 @Data
 public class BusinessResponse {
@@ -22,6 +20,7 @@ public class BusinessResponse {
     private List<String> services;
     private double minRate;
     private double maxRate;
-    private String profileImageUrl;
-
+    private Double rating;
+    private String profilePicData;
+    private List<BusinessProductImageDTO> products;
 }

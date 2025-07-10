@@ -434,7 +434,7 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Client Profile")),
+      appBar: AppBar(title: const Text("Profile"),),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

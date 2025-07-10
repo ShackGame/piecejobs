@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -38,11 +39,19 @@ public class Business {
     @CreationTimestamp
     private LocalDateTime dateCreated;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @OneToOne
+    @JoinColumn(name = "user_id")
     private Users user;
 
-    private String profileImageUrl;
+    private Double rating;
 
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<BusinessProductImages> productImages = new ArrayList<>();;
+
+    @Column(name = "profile_pic_data", columnDefinition = "bytea")
+    private byte[] profilePicData;
+
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Stylist> stylists = new ArrayList<>();
 }
 

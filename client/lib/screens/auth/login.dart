@@ -80,11 +80,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if(response.statusCode == 200){
       final data = jsonDecode(response.body);
 
-      if(!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful')),
-      );
-
       //Optional: Save user info/token using shared_preferences here
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', data['token']);
@@ -118,22 +113,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Welcome back!',
+                    'On Point',
                     style: TextStyle(
                       fontSize: 24,
                       color: Colors.deepPurpleAccent,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Sign in to discover your next gig',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
+
+                  const SizedBox(height: 60),
 
                   // Email Field
                   TextFormField(

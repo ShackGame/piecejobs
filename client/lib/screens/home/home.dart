@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:client/screens/home/bookings/provider_bookings_page.dart';
 import 'package:client/screens/home/dashboard.dart';
 import 'package:client/screens/home/dashboards/admin/admin_dashboard_page.dart';
 import 'package:client/screens/home/dashboards/client/client_dashboard_page.dart';
@@ -11,12 +12,21 @@ import 'package:client/screens/home/profiles/provider/provider_add_business_page
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:client/utils/business.dart';
 
 import '../auth/login.dart';
 import 'messages/provider/provider_messages_page.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int initialIndex;
+  final Business? business;
+
+  const HomeScreen({
+    super.key,
+    this.initialIndex = 0,
+    this.business,
+  });
+
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -39,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex;
     _checkLoginStatus();
   }
 
@@ -60,27 +71,45 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     if (email != null && userId != null && userType != null) {
-      late Widget dashboard, messages, thirdPage;
+      late Widget dashboard, bookings, thirdPage;
 
       switch (userType) {
         case ROLE_PROVIDER:
-          dashboard = ProviderDashboardPage();
-          messages = const ProviderMessagesPage();
-          thirdPage = ProviderAddBusinessPage();
+        // ✅ Fetch business for provider
+          final response = await http.get(
+            Uri.parse("http://10.0.2.2:8080/businesses/user/$userId/single"),
+          );
+
+          if (response.statusCode == 200) {
+            final jsonData = jsonDecode(response.body);
+            Business business = Business.fromJson(jsonData);
+
+            dashboard = ProviderDashboardPage();
+            bookings = ProviderBookingsPage(business: business);
+            thirdPage = ProviderAddBusinessPage();
+          } else {
+            // Handle error or show fallback UI
+            dashboard = ProviderDashboardPage();
+            bookings = const Center(child: Text("Failed to load business"));
+            thirdPage = ProviderAddBusinessPage();
+          }
           break;
+
         case ROLE_CLIENT:
           dashboard = ClientDashboardPage();
-          messages = const ProviderMessagesPage(); // TODO: Replace with ClientMessagesPage later
+          bookings = const ProviderMessagesPage(); // Replace later if needed
           thirdPage = ClientProfilePage();
           break;
+
         case ROLE_ADMIN:
           dashboard = const AdminDashboard();
-          messages = const ProviderMessagesPage();
+          bookings = const ProviderMessagesPage();
           thirdPage = const ProfilePage();
           break;
+
         default:
           dashboard = const DashboardPage();
-          messages = const ProviderMessagesPage();
+          bookings = const ProviderMessagesPage();
           thirdPage = const ProfilePage();
       }
 
@@ -88,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _pages = [
           dashboard,
-          messages,
+          bookings,
           thirdPage,
         ];
         _isChecking = false;
@@ -103,12 +132,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     if(_isChecking || _pages.isEmpty){
       return const Scaffold(
         body: Center(child: CircularProgressIndicator(),),
       );
     }
     return Scaffold(
+      backgroundColor: Color(0xFFE8DDF9),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -121,9 +152,9 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.message),
-            label: 'Messages',
+          BottomNavigationBarItem(
+            icon: Icon(_userType == 'Provider' ? Icons.calendar_month : Icons.person),
+            label: _userType == 'Provider' ? 'Bookings' : 'Booking',
           ),
           BottomNavigationBarItem(
             icon: Icon(_userType == 'Provider' ? Icons.add_business : Icons.person),

@@ -64,10 +64,16 @@ public class SecurityConfig {
                                 "/users/upload-profile-image/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/clients/profile/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/", "/index", "/home").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/**", "/businesses/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/users/**", "/businesses/**", "/clients/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/businesses/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/businesses/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/stylists/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/stylists/business/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/stylists/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/stylists/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

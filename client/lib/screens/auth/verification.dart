@@ -148,7 +148,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
               ? 'Verify Account OTP'
               : 'Verify Password Reset OTP',
         ),
-        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),

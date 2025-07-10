@@ -1,5 +1,7 @@
 package com.piecejobs.api.dto.user;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Lob;
 import lombok.Data;
 
 import java.util.List;
@@ -20,4 +22,5 @@ public class BusinessRequest {
     private List<String> services;
     private float minRate;
     private float maxRate;
+    private Double rating;
 }
